@@ -1,5 +1,5 @@
 """
-CEE module: CEE 模块
+CEE module: CEE module
 """
 
 import torch
@@ -20,9 +20,9 @@ class CEE(nn.Module):
 
     def forward(self, cascaded_edge_encoding, vertex_features):
         """
-        :param cascaded_edge_encoding: 级联边编码(num_nodes, num_nodes, n_heads)
-        :param vertex_features: 经过GAT的节点特征(num_nodes, 128)
-        :return: 预测的邻接矩阵(num_nodes, num_nodes)
+        :param cascaded_edge_encoding: Cascaded edge coding(num_nodes, num_nodes, n_heads)
+        :param vertex_features: Node characteristics passing through GAT(num_nodes, 128)
+        :return: Predicted adjacency matrix(num_nodes, num_nodes)
         """
 
         # edge_features = torch.zeros((self.num_nodes, self.num_nodes, (256+8)), dtype=torch.float32)
@@ -36,7 +36,7 @@ class CEE(nn.Module):
 
         # out = self.mlp(edge_features)
 
-        # 消耗内存过大，使用随机张量进行模拟
+        # Too much memory consumption, use random tensors for simulation
         edge_features_random = torch.randn(1101, 1101, 264)
 
         out = self.mlp(edge_features_random)

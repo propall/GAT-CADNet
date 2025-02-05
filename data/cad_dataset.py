@@ -18,7 +18,7 @@ class CADDataset(Dataset):
     def __getitem__(self, item):
         file_path = self.svg_paths[item]
 
-        # 获取对应的graph
+        # Get the corresponding graph
         paths, attributes = parse_svg(file_path)
         points_info, segment_types, semantic_ids = extract_mid_points_and_segments(paths, attributes)
         graph = build_graph_with_features(points_info, segment_types, semantic_ids)

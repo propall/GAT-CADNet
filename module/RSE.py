@@ -1,7 +1,7 @@
 """
-RSE module: (Relative spatial encoding): 相对空间编码
-研究人员经常使用相对位置编码来使网络对平移不变并感知距离
-使用多层感知机MLP来对初始边特征进行处理以编码顶点之间的相对空间关系
+RSE module: (Relative spatial encoding): Relative space encoding
+Researchers often use relative position coding to keep the network translation unchanged and perceive distance
+Use multi-layer perceptron MLP to process initial edge features to encode relative spatial relationships between vertices
 """
 from torch import nn
 import torch.nn.functional as F

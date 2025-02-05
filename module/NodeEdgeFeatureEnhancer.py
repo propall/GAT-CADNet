@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# 用于对节点特征和边特征进行特征提取
+# Used to feature extraction of node features and edge features
 class MLP(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
@@ -19,27 +19,27 @@ class NodeEdgeFeatureEnhancer(nn.Module):
     def __init__(self, node_input_dim, edge_input_dim, output_dim):
         super().__init__()
 
-        # MLP提取节点特征和边特征
-        self.node_mlp = MLP(node_input_dim, 64)     # 将节点特征映射到64维
-        self.edge_mlp = MLP(edge_input_dim, 64)     # 将边特征映射到64维
+        # MLP extracts node features and edge features
+        self.node_mlp = MLP(node_input_dim, 64)     # Map node features to 64-dimensional
+        self.edge_mlp = MLP(edge_input_dim, 64)     # Map edge features to 64-dimensional
 
-        # 最终输出维度
+        # Final output dimension
         self.output_dim = output_dim
 
     def forward(self, node_features, edge_features):
-        # 嵌入节点特征
-        node_emb = self.node_mlp(node_features)     # 节点嵌入 v_hat_i
+        # Embed node features
+        node_emb = self.node_mlp(node_features)     # Node embedding v_hat_i
 
-        # 嵌入边特征
-        edge_emb = self.edge_mlp(edge_features)     # 边嵌入 e_hat_ij
+        # Embed edge features
+        edge_emb = self.edge_mlp(edge_features)     # Edge embed e_hat_ij
 
-        # 对每个节点的边特征进行池化(max pooling)
+        # Pool edge features of each node(max pooling)
         if edge_emb.size(0) > 0:
             pooled_edge_feats = torch.max(edge_emb, dim=0)[0].unsqueeze(0)
         else:
-            pooled_edge_feats = torch.zeros(edge_emb.size(1)).unsqueeze(0)  # 处理为空的情况
+            pooled_edge_feats = torch.zeros(edge_emb.size(1)).unsqueeze(0)  # Processing empty
 
-        # 拼接节点特征和池化后的边特征
+        # Spliced ​​node features and edge features after pooling
         enhanced_node_features = torch.cat([node_emb, pooled_edge_feats], dim=1)
 
         return enhanced_node_features

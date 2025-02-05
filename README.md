@@ -5,6 +5,38 @@ this code is based on the paper published on CVPR2022 named [GAT-CADNet: Graph A
 Because this paper did not provide official code, I reproduced the model and training process based on the content of 
 the paper. Welcome every one to ask me questions and point out the problems that exist.
 
+## Setup Instructions by Manjunadh
+
+```bash
+git clone https://github.com/propall/GAT-CADNet.git
+cd GAT-CADNet
+
+conda create -n GAT-CADNet python=3.11 -y
+conda activate GAT-CADNet
+
+
+# Installing everything using pip as conda is dropped for pytorch from v2.6. Note that torch_geometric is only available for pytorchv2.5.* and python (v3.9-v3.12)
+pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+pip install torch_geometric
+pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.5.0+cu124.html
+
+mkdir dataset
+cd dataset/
+# Place all the FloorplanCAD data inside this dataset folder, a sample FloorplanCAD dataset is present in FloorplanCAD_sampledataset
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
 # Getting Started
 
 ## Environment Construction
