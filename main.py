@@ -7,12 +7,14 @@ from module.NodeEdgeFeatureEnhancer import NodeEdgeFeatureEnhancer
 from module.RSE import RSE
 import torch.nn as nn
 
+
+
 # Data set
 dataset = CADDataset(svg_path='FloorplanCAD_sampledataset/train-00')
 
 # Set training parameters
 n_heads = 8
-num_epochs = 100
+num_epochs = 3
 lr = 0.001
 beta1 = 0.9
 beta2 = 0.99
@@ -24,8 +26,9 @@ lambda_ins = 2
 # Semantic Loss: CrossEntropyLoss
 sem_loss = nn.CrossEntropyLoss()
 
-# Instance loss: BinaryCrossEntropyLoss
-ins_loss = nn.BCEWithLogitsLoss(reduction='none')  # 使用none，以便我们可以手动加权
+# Instance loss: BinaryCrossEntropyLoss (numerically stable compared to applying torch.sigmoid() followed by nn.BCELoss())
+# BCEWithLogitsLoss = −(ylog(σ(x)) + (1−y)log(1−σ(x))) [y = groundtruth, x = logit]
+ins_loss = nn.BCEWithLogitsLoss(reduction='none')  # Use none so we can manually weight
 
 # Model
 model = GATCADNet(
@@ -34,6 +37,7 @@ model = GATCADNet(
         num_heads=n_heads,
         num_stages=8,
     )
+
 
 # Adam Optimizer
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(beta1, beta2))
@@ -45,10 +49,12 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=lr_decay_step, gamma=
 for epoch in range(num_epochs):
     model.train()
     for graph in dataset:
-        vertex_target = graph.y  # (num_nodes, 1)
+        vertex_target = graph.y  # (num_nodes, 1) # graph.y is a tensor containing the semantic class labels for each node.
         vertex_target_classes = int(vertex_target.max()) + 1
         adj_matrix_target = graph.adj_matrix    # Real adjacency matrix
         num_nodes = graph.num_nodes
+        
+        # print(f"vertex_target, vertex_target_classes, num_nodes, adj_matrix_target: {vertex_target.shape}, {vertex_target_classes}, {num_nodes}, {adj_matrix_target.shape}") # torch.Size([1079]), 30, 1079, torch.Size([1079, 1079])
         vertex_features_list = []
 
         """ Use edge features to enhance node features """
@@ -73,7 +79,7 @@ for epoch in range(num_epochs):
         """ Process edge features and perform relative space encoding """
         # Create a tensor with shape (num_nodes, num_nodes, 7) to store the features of all edges
         edge_feature_matrix = torch.zeros(num_nodes, num_nodes, 7)
-        RSE = RSE(in_channels=7, out_channels=n_heads)
+        rse_module = RSE(in_channels=7, out_channels=n_heads) # Original https://github.com/Liberation-happy/GAT-CADNet code is RSE = RSE(in_channels=7, out_channels=n_heads), since both the classname and instance object have the same names, there is a naming conflict and thus uses the class instead of this computed value later, throwing an error
 
         # Fill the features of each edge into edge_feature_matrix
         for i in range(graph.edge_index.shape[1]):
@@ -81,7 +87,7 @@ for epoch in range(num_epochs):
             edge_feature_matrix[u, v] = graph.edge_attr[i]  # Fill edge features to (u, v) position
             edge_feature_matrix[v, u] = graph.edge_attr[i]  # For undirected graphs, fill (v, u) positions
         # Processing this tensor using RSE (num_nodes, num_nodes, 7) -> (num_nodes, num_nodes, n_heads)
-        edge_feature_matrix = RSE(edge_feature_matrix)
+        edge_feature_matrix = rse_module(edge_feature_matrix)
         num_nodes = edge_feature_matrix.size(0)
 
         """ Training GATCADNet using data """
@@ -96,6 +102,7 @@ for epoch in range(num_epochs):
 
         # Semantic Loss
         loss_sem = sem_loss(predict_vertex_features, vertex_target)
+        # print(f"loss_sem: {loss_sem}")
 
         # Instance loss
         # Constructing a weight matrix
@@ -109,6 +116,7 @@ for epoch in range(num_epochs):
                 elif vertex_target[i] != vertex_target[j] and adj_matrix_target[i, j] == 1:
                     w[i, j] = 0
 
+        # print(f"Shapes of predict_adj_matrix, adj_matrix_target: {predict_adj_matrix.shape}, {adj_matrix_target.shape}") # torch.Size([1101, 1101]), torch.Size([1079, 1079])
         loss_ins = ins_loss(predict_adj_matrix, adj_matrix_target)
 
         weighted_loss_ins = loss_ins * w

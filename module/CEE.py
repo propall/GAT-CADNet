@@ -37,12 +37,12 @@ class CEE(nn.Module):
         # out = self.mlp(edge_features)
 
         # Too much memory consumption, use random tensors for simulation
-        edge_features_random = torch.randn(1101, 1101, 264)
+        edge_features_random = torch.randn(self.num_nodes, self.num_nodes, 264) ####### Changed by Manjunadh (1101,1101,264) -> (self.num_nodes, self.num_nodes, 264)
 
         out = self.mlp(edge_features_random)
 
         out = torch.sigmoid(out)
 
-        out = out.view(1101, 1101)
+        out = out.view(self.num_nodes, self.num_nodes) ####### Changed by Manjunadh (1101,1101) -> (self.num_nodes, self.num_nodes)
 
         return out
