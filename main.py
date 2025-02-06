@@ -7,6 +7,8 @@ from module.NodeEdgeFeatureEnhancer import NodeEdgeFeatureEnhancer
 from module.RSE import RSE
 import torch.nn as nn
 
+from tqdm import tqdm
+
 # Detect GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -34,6 +36,7 @@ sem_loss = nn.CrossEntropyLoss()
 # BCEWithLogitsLoss = −(ylog(σ(x)) + (1−y)log(1−σ(x))) [y = groundtruth, x = logit]
 ins_loss = nn.BCEWithLogitsLoss(reduction='none')  # Use none so we can manually weight
 
+print("Defined loss fns.................")
 # Model
 model = GATCADNet(
         in_channels=128,
@@ -41,18 +44,20 @@ model = GATCADNet(
         num_heads=n_heads,
         num_stages=8,
     ).to(device)
-
+print("Initialised and moved model to GPU.................")
 
 # Adam Optimizer
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(beta1, beta2))
 
 # Learning rate scheduler
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=lr_decay_step, gamma=decay_rate)
-
+print("Defined optimizer and scheduler, entering training loop.................")
 # Model training process
 for epoch in range(num_epochs):
+    print("Set model to train mode and start new epoch.................")
     model.train()
     for graph in dataset:
+        print("Parsing through dataset...........")
         vertex_target = graph.y.to(device)  # (num_nodes, 1) # graph.y is a tensor containing the semantic class labels for each node.
         
         # Also move graph.x, graph.adj_matrix, graph.edge_attr, graph.edge_index to device:
@@ -113,12 +118,13 @@ for epoch in range(num_epochs):
 
         # Semantic Loss
         loss_sem = sem_loss(predict_vertex_features, vertex_target)
-        # print(f"loss_sem: {loss_sem}")
+        print(f"loss_sem: {loss_sem}")
 
         # Instance loss
+        print("Constructing a weight matrix")
         # Constructing a weight matrix
-        w = torch.ones(num_nodes, num_nodes)
-        for i in range(num_nodes):
+        w = torch.ones(num_nodes, num_nodes, device=device) # This constructs weight matrix on GPU while "w = torch.ones(num_nodes, num_nodes).to(device)" first creates w on CPU and then moves to GPU
+        for i in tqdm(range(num_nodes), desc="Rows"):
             for j in range(num_nodes):
                 if vertex_target[i] == vertex_target[j] and adj_matrix_target[i, j] == 0:
                     w[i, j] = 20
@@ -126,6 +132,8 @@ for epoch in range(num_epochs):
                     w[i, j] = 2
                 elif vertex_target[i] != vertex_target[j] and adj_matrix_target[i, j] == 1:
                     w[i, j] = 0
+        
+        print("Computed weight matrix")
 
         # print(f"Shapes of predict_adj_matrix, adj_matrix_target: {predict_adj_matrix.shape}, {adj_matrix_target.shape}") # torch.Size([1101, 1101]), torch.Size([1079, 1079])
         loss_ins = ins_loss(predict_adj_matrix, adj_matrix_target)
