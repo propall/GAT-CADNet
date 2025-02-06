@@ -37,7 +37,7 @@ class NodeEdgeFeatureEnhancer(nn.Module):
         if edge_emb.size(0) > 0:
             pooled_edge_feats = torch.max(edge_emb, dim=0)[0].unsqueeze(0)
         else:
-            pooled_edge_feats = torch.zeros(edge_emb.size(1)).unsqueeze(0)  # Processing empty
+            pooled_edge_feats = torch.zeros(edge_emb.size(1), device=node_features.device).unsqueeze(0)  # Processing empty
 
         # Spliced ​​node features and edge features after pooling
         enhanced_node_features = torch.cat([node_emb, pooled_edge_feats], dim=1)

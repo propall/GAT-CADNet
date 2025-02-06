@@ -49,9 +49,9 @@ class GATCADNet(nn.Module):
         :return: Classification results
         """
 
-        mlp_module = GATCADNetMLP(self.out_channels, num_classes)
+        mlp_module = GATCADNetMLP(self.out_channels, num_classes).to(vertex_features.device)
         # Cascade edge encoding for CEE module
-        cascaded_edge_encoding = torch.zeros(num_nodes, num_nodes, self.num_heads)
+        cascaded_edge_encoding = torch.zeros(num_nodes, num_nodes, self.num_heads, device=vertex_features.device)
 
         for s in range(self.num_stages):
             vertex_features, attention_scores = self.gat_layers[s](vertex_features, relative_encoding, num_nodes)

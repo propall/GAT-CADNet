@@ -7,10 +7,14 @@ from module.NodeEdgeFeatureEnhancer import NodeEdgeFeatureEnhancer
 from module.RSE import RSE
 import torch.nn as nn
 
-
+# Detect GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
 
 # Data set
 dataset = CADDataset(svg_path='FloorplanCAD_sampledataset/train-00')
+
+print("Loaded Dataset through dataloader.................")
 
 # Set training parameters
 n_heads = 8
@@ -36,7 +40,7 @@ model = GATCADNet(
         out_channels=128,
         num_heads=n_heads,
         num_stages=8,
-    )
+    ).to(device)
 
 
 # Adam Optimizer
@@ -49,7 +53,14 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=lr_decay_step, gamma=
 for epoch in range(num_epochs):
     model.train()
     for graph in dataset:
-        vertex_target = graph.y  # (num_nodes, 1) # graph.y is a tensor containing the semantic class labels for each node.
+        vertex_target = graph.y.to(device)  # (num_nodes, 1) # graph.y is a tensor containing the semantic class labels for each node.
+        
+        # Also move graph.x, graph.adj_matrix, graph.edge_attr, graph.edge_index to device:
+        graph.x = graph.x.to(device)
+        graph.adj_matrix = graph.adj_matrix.to(device)
+        graph.edge_attr = graph.edge_attr.to(device)
+        graph.edge_index = graph.edge_index.to(device)
+        
         vertex_target_classes = int(vertex_target.max()) + 1
         adj_matrix_target = graph.adj_matrix    # Real adjacency matrix
         num_nodes = graph.num_nodes
@@ -68,7 +79,7 @@ for epoch in range(num_epochs):
             # Get the features of these edges
             # (num_edges（Number of neighbors）, 7)
             edge_features = graph.edge_attr[edge_indices]
-            enhancer = NodeEdgeFeatureEnhancer(node_input_dim=7, edge_input_dim=7, output_dim=128)
+            enhancer = NodeEdgeFeatureEnhancer(node_input_dim=7, edge_input_dim=7, output_dim=128).to(device)
             # (1, 128)
             node_new_features = enhancer(node_features, edge_features)
             vertex_features_list.append(node_new_features)
@@ -78,8 +89,8 @@ for epoch in range(num_epochs):
 
         """ Process edge features and perform relative space encoding """
         # Create a tensor with shape (num_nodes, num_nodes, 7) to store the features of all edges
-        edge_feature_matrix = torch.zeros(num_nodes, num_nodes, 7)
-        rse_module = RSE(in_channels=7, out_channels=n_heads) # Original https://github.com/Liberation-happy/GAT-CADNet code is RSE = RSE(in_channels=7, out_channels=n_heads), since both the classname and instance object have the same names, there is a naming conflict and thus uses the class instead of this computed value later, throwing an error
+        edge_feature_matrix = torch.zeros(num_nodes, num_nodes, 7, device=device)
+        rse_module = RSE(in_channels=7, out_channels=n_heads).to(device) # Original https://github.com/Liberation-happy/GAT-CADNet code is RSE = RSE(in_channels=7, out_channels=n_heads), since both the classname and instance object have the same names, there is a naming conflict and thus uses the class instead of this computed value later, throwing an error
 
         # Fill the features of each edge into edge_feature_matrix
         for i in range(graph.edge_index.shape[1]):
