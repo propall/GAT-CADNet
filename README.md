@@ -36,6 +36,9 @@ mkdir -p ~/GAT-CADNet/dataset/train-00 && tar -xJvf ~/GAT-CADNet/dataset/train-0
 -f: Specifies the file to extract.
 -C ~/dataset/train-00: Extracts the files into the dataset/train-00 directory.
 
+
+mkdir -p ~/GAT-CADNet/dataset/train-00 && tar -xJvf ~/GAT-CADNet/dataset/train-00.tar.xz -C ~/GAT-CADNet/dataset/train-00
+unzip FloorplanCAD_sampledataset.zip
 ```
 
 

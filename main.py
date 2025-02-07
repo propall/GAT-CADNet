@@ -14,7 +14,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Data set
-dataset = CADDataset(svg_path='dataset/train-00')
+dataset = CADDataset(svg_path='dataset/FloorplanCAD_sampledataset/train-00')
 
 print("Loaded Dataset through dataloader.................")
 
@@ -52,6 +52,10 @@ optimizer = optim.Adam(model.parameters(), lr=lr, betas=(beta1, beta2))
 # Learning rate scheduler
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=lr_decay_step, gamma=decay_rate)
 print("Defined optimizer and scheduler, entering training loop.................")
+
+print("Before training starts:")
+print(torch.cuda.memory_summary(device=None, abbreviated=True)) # provides short summary of memory statistics
+
 # Model training process
 for epoch in range(num_epochs):
     print("Set model to train mode and start new epoch.................")
@@ -67,7 +71,7 @@ for epoch in range(num_epochs):
         graph.edge_index = graph.edge_index.to(device)
         
         vertex_target_classes = int(vertex_target.max()) + 1
-        adj_matrix_target = graph.adj_matrix    # Real adjacency matrix
+        adj_matrix_target = graph.adj_matrix.to(device)    # Real adjacency matrix
         num_nodes = graph.num_nodes
         
         # print(f"vertex_target, vertex_target_classes, num_nodes, adj_matrix_target: {vertex_target.shape}, {vertex_target_classes}, {num_nodes}, {adj_matrix_target.shape}") # torch.Size([1079]), 30, 1079, torch.Size([1079, 1079])
@@ -118,6 +122,7 @@ for epoch in range(num_epochs):
 
         # Semantic Loss
         loss_sem = sem_loss(predict_vertex_features, vertex_target)
+        print(f"loss_sem is on: {loss_sem.device}, dtype: {loss_sem.dtype}, shape: {loss_sem.shape}") # cuda:0, dtype: torch.float32, shape: torch.Size([])
         print(f"loss_sem: {loss_sem}")
 
         # Instance loss
@@ -134,6 +139,16 @@ for epoch in range(num_epochs):
                     w[i, j] = 0
         
         print("Computed weight matrix")
+        
+        print("After computing weight matrix:")
+        print(torch.cuda.memory_summary(device=None, abbreviated=True)) # provides provides short summary of memory statistics of memory statistics
+
+        # Just printing where predict_adj_matrix and adj_matrix_target tensors are located for debugging purpose
+        print(f"predict_adj_matrix is on: {predict_adj_matrix.device}, dtype: {predict_adj_matrix.dtype}, shape: {predict_adj_matrix.shape}") # cpu, dtype: torch.float32, shape: torch.Size([371, 371])
+        print(f"adj_matrix_target is on: {adj_matrix_target.device}, dtype: {adj_matrix_target.dtype}, shape: {adj_matrix_target.shape}") # cuda:0, dtype: torch.float32, shape: torch.Size([371, 371])
+
+        # Ensure predict_adj_matrix is on the same device as adj_matrix_target
+        predict_adj_matrix = predict_adj_matrix.to(device)
 
         # print(f"Shapes of predict_adj_matrix, adj_matrix_target: {predict_adj_matrix.shape}, {adj_matrix_target.shape}") # torch.Size([1101, 1101]), torch.Size([1079, 1079])
         loss_ins = ins_loss(predict_adj_matrix, adj_matrix_target)
