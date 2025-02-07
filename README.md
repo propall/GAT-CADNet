@@ -25,8 +25,16 @@ mkdir dataset
 cd dataset/
 # Place all the FloorplanCAD data inside this dataset folder, a sample FloorplanCAD dataset is present in FloorplanCAD_sampledataset
 
+Extracting a compressed file:
+tar -xvf train-00.tar.xz ~/GAT-CADNet/dataset/train-00
+tar -xvf train-01.tar.xz ~/GAT-CADNet/dataset/train-01
+tar -xvf test-00.tar.xz ~/GAT-CADNet/dataset/test-00
 
-
+mkdir -p ~/GAT-CADNet/dataset/train-00 && tar -xJvf ~/GAT-CADNet/dataset/train-00.tar.xz -C ~/GAT-CADNet/dataset/train-00
+-x: Extract files.
+-J: Use xz compression.
+-f: Specifies the file to extract.
+-C ~/dataset/train-00: Extracts the files into the dataset/train-00 directory.
 
 ```
 

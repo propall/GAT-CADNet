@@ -14,7 +14,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Data set
-dataset = CADDataset(svg_path='FloorplanCAD_sampledataset/train-00')
+dataset = CADDataset(svg_path='dataset/train-00')
 
 print("Loaded Dataset through dataloader.................")
 

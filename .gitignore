@@ -1,6 +1,7 @@
 .idea
-*.svg
 module/__pycache__
 model/__pycache__
 data/__pycache__
 *Zone.Identifier
+dataset/
+*.tar.xz
