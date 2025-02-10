@@ -1,9 +1,11 @@
 """
+Source: GAT-CADNet Paper (Pg3, equation 2)
 Used to calculate the features of each vertex in the graph
 vertex_feature = [cos(2a_i), sin(2a_i), l_i, t_i]
 where a is the angle between the line from the coordinate origin to the vertex and the x-axis
-l_i: sqrt(x^2 + y^2)
+l_i: Length of vᵢ sqrt(x² + y²)
 t_i: One-hot encoding for arcs, segments, circles and ellipses
+
 """
 
 import numpy as np

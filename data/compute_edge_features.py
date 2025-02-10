@@ -1,4 +1,8 @@
-# 计算边的特征
+"""
+Source: GAT-CADNet Paper (Pg4, equations 3-6)
+Used to calculate the features of edges in graph
+
+"""
 
 import math
 import numpy as np
@@ -13,13 +17,13 @@ class EdgeFeatures:
     def midpoint(v1, v2):
         return (v1[0] + v2[0]) / 2, (v1[1] + v2[1]) / 2
 
-    # Calculate position offset δij = mj - mi
+    # Calculate position offset δᵢⱼ = mⱼ - mᵢ (Source: Pg 4, equation 3)
     def position_offset(self, vi, vj):
         mi = self.midpoint(vi[0], vi[1])
         mj = self.midpoint(vj[0], vj[1])
         return mj[0] - mi[0], mj[1] - mi[1]  # Returns the offset in the x and y directions
 
-    # Calculate direction offset ∡ij（The angle between two vectors）
+    # Calculate direction offset ∡ij（The angle between two vectors, Source: Pg 4）
     @staticmethod
     def direction_offset(vi, vj):
         # vi and vj Direction vector
@@ -45,7 +49,7 @@ class EdgeFeatures:
     def length(vi):
         return math.sqrt((vi[1][0] - vi[0][0]) ** 2 + (vi[1][1] - vi[0][1]) ** 2)
 
-    # Calculate the length ratio rij = li / (li + lj)
+    # Calculate the length ratio rᵢⱼ = lᵢ / (lᵢ + lⱼ) (Source: Pg 4, equation 4)
     def length_ratio(self, vi, vj):
         li = self.length(vi)
         lj = self.length(vj)
@@ -76,7 +80,7 @@ class EdgeFeatures:
     def shares_endpoint(vi, vj):
         return vi[0] == vj[0] or vi[1] == vj[1]  # Check if the endpoint is the same
 
-    # Calculate the features of edges
+    # Calculate the features of edges (Source: Pg 4, equation 6)
     def compute_edge_features(self, vi, vj):
         # δij = mj - mi
         position_offset = self.position_offset(vi, vj)
@@ -92,7 +96,7 @@ class EdgeFeatures:
         orthogonal = 1 if self.is_orthogonal(vi, vj) else 0
         shares_endpoint = 1 if self.shares_endpoint(vi, vj) else 0
 
-        # List of binary indicators
+        # List of binary indicators (Source: Pg 4, equation 5)
         gij = [parallel, orthogonal, shares_endpoint]
 
         # Returns an array containing all features

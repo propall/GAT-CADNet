@@ -7,6 +7,35 @@ from svgpathtools import svg2paths
 from data.compute_edge_features import EdgeFeatures
 from data.compute_vertex_features import compute_vertex_features
 
+"""
+Assume the svg file has an equilateral triangle, its svg file looks like this:
+
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 50 150 L 150 150 L 100 50 Z" stroke="black" stroke-width="2" fill="none"/>
+</svg>
+
+Command 	| Meaning	            | Coordinates
+M 50 150	| Move To (50, 150)	    | Starts the path at (50, 150)
+L 150 150	| Line To (150, 150)	| Draws a straight line to (150, 150)
+L 100 50	| Line To (100, 50)	    | Draws a straight line to (100, 50)
+Z	        | Close Path	        | Connects back to the starting point (50, 150), closing the shape
+
+(1) paths, attributes = parse_svg("triangle.svg")
+
+# Output:
+paths = [
+    [(50, 150), (150, 150)],
+    [(150, 150), (100, 50)],
+    [(100, 50), (50, 150)]
+]
+
+attributes = [
+    {"stroke": "black", "stroke-width": 2, "fill": "none"},
+    {"stroke": "black", "stroke-width": 2, "fill": "none"},
+    {"stroke": "black", "stroke-width": 2, "fill": "none"}
+]
+
+"""
 
 # Parse svg files
 def parse_svg(svg_file):
@@ -27,6 +56,17 @@ def distance(point1, point2):
 # Extract the midpoint of a path
 def extract_mid_points_and_segments(paths, attributes):
     """
+    Extracts key points and segment types from SVG path data
+    Args:
+        paths (list) : List of path commands describing the geometric shape(drawing outlines in the image).
+        attributes (list) : List of properties associated with each path
+            Keys: "semantic-id", 
+    Returns:
+        points_info: Midpoints and endpoints of each segment. [[(midpoint coordinates), (starting point coordinates), (end point coordinates)]]
+        segment_types: Stores the type of geometric segment ('line', 'arc', 'circle', 'ellipse')
+        semantic_ids: Stores ids if present, else stores None
+
+    
     Extract point and edge information from svg files(
         line: Get the starting point and end point of the line segment
         arc: Get the connecting line segment between the starting point and the end point of the arc
@@ -36,19 +76,17 @@ def extract_mid_points_and_segments(paths, attributes):
     :param attributes: Attribute dictionary of all elements after svg parsing
     :param paths: svg parsing content
     :return:
-    points_info: [[(midpoint coordinates), (starting point coordinates), (end point coordinates)]]
 
-    segment_types: ['line', 'arc', 'circle', 'ellipse'] Corresponding line type
-    semantic_ids: [[semantic-id]]   Category of corresponding point
     instance_ids: [[instance-id]]
     """
-    points_info = []
-    segment_types = []
+    points_info = [] # Stores midpoints and endpoints of each segment.
+    segment_types = [] # Stores the type of geometric segment ('line', 'arc', 'circle', 'ellipse')
     semantic_ids = []
 
+    # Using ".get()" instead of path_attributes['semantic-id'] avoids errors if the key doesn’t exist and allows setting a default fallback value(None)
     for path, path_attributes in zip(paths, attributes):
         # Get the semantic-id on the path
-        semantic_id = path_attributes.get('semantic-id', None)
+        semantic_id = path_attributes.get('semantic-id', None) # Look for the key 'semantic-id' and if not found return None 
         for segment in path:
             # add semantic-id
             if semantic_id:
@@ -92,13 +130,19 @@ def extract_mid_points_and_segments(paths, attributes):
 
 # Functions for building graphs, using midpoints as vertices
 def build_graph_with_features(points_info, segment_types, semantic_ids, threshold_distance=300, max_edges_per_node=30):
-    graph = nx.Graph()
-    edge_feature_calculator = EdgeFeatures()
+    """
+    Constructs graph using midpoints of SVG path segments, connects nodes based on their distances, and assigns features to nodes and edges.
+    threshold_distance is epsilon in paper Pg 3 while max_edges_per_node is K in paper Pg 3(above Instance and subgraph section)
+    """
+    
+    
+    graph = nx.Graph() # Create an empty graph
+    edge_feature_calculator = EdgeFeatures() # A class that computes edge features.
 
     # Get midpoint information
     mid_points = [point_info[0] for point_info in points_info]
 
-    # Calculate the characteristics of each vertex
+    # Calculate the characteristics of each vertex(using the midpoints for segment related calculation)
     vertex_features = compute_vertex_features(mid_points, segment_types)
 
     # Add nodes and features for each vertex

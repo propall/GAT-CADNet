@@ -3,15 +3,30 @@ import networkx as nx
 from torch_geometric.data import Data
 import numpy as np
 
+"""
+Data Objects:
+torch_geometric.data.Data: A data object describing a homogeneous graph.(all nodes are of same type)
+torch_geometric.data.HeteroData: A data object describing a heterogeneous graph.(nodes/edges are of multiple classes/types)
+
+"""
 
 # Convert networkx's graph to torch_geometric Data class
 def convert_nx_to_tg_data(graph: nx.Graph) -> Data:
+    """
+    A function that converts a NetworkX graph (nx.Graph) into a PyTorch Geometric (torch_geometric.data.Data) object.
+    
+    - graph.nodes(data=True) returns an iterator of (node_id, node_attributes)
+    - graph.edges(data=True) returns an iterator of (source, destination, edge_attributes)
+    """
+    # print(f"graph.nodes : {graph.nodes}") # List of node_ids
+    # print(f"graph.edges : {len(graph.edges)}") # List of tuples, each tuple contains 2 node_ids that make the edge
+    
     # Get the features of all points in the graph and splice them into vertex feature vectors
     node_features = [data['features'] for _, data in graph.nodes(data=True)]
-    node_features = np.array(node_features).astype(np.float32)
+    node_features = np.array(node_features).astype(np.float32) # (len(graph.nodes), 7)
 
     edge_features = [data['features'] for _, _, data in graph.edges(data=True)]
-    edge_features = np.array(edge_features).astype(np.float32)
+    edge_features = np.array(edge_features).astype(np.float32) # (len(graph.edges), 7)
 
     # Get the connection information of the edge(edge_index)
     edge_index = np.array(list(graph.edges)).T  # shape: (2, num_edges)

@@ -9,13 +9,19 @@ import torch.nn as nn
 
 from tqdm import tqdm
 
+
+
 # Detect GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Data set
 dataset = CADDataset(svg_path='dataset/FloorplanCAD_sampledataset/train-00')
+print(type(dataset), dataset)
 
+
+print("tested")
+exit()
 print("Loaded Dataset through dataloader.................")
 
 # Set training parameters
@@ -129,6 +135,7 @@ for epoch in range(num_epochs):
         print("Constructing a weight matrix")
         # Constructing a weight matrix
         w = torch.ones(num_nodes, num_nodes, device=device) # This constructs weight matrix on GPU while "w = torch.ones(num_nodes, num_nodes).to(device)" first creates w on CPU and then moves to GPU
+
         for i in tqdm(range(num_nodes), desc="Rows"):
             for j in range(num_nodes):
                 if vertex_target[i] == vertex_target[j] and adj_matrix_target[i, j] == 0:
@@ -137,7 +144,10 @@ for epoch in range(num_epochs):
                     w[i, j] = 2
                 elif vertex_target[i] != vertex_target[j] and adj_matrix_target[i, j] == 1:
                     w[i, j] = 0
+
+
         
+                
         print("Computed weight matrix")
         
         print("After computing weight matrix:")
