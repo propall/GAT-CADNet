@@ -36,8 +36,8 @@ def convert_nx_to_tg_data(graph: nx.Graph) -> Data:
 
     # Convert data to pytorch tensor
     node_features_tensor = torch.tensor(node_features, dtype=torch.float32)
-    edge_index_tensor = torch.tensor(edge_index, dtype=torch.long)
     edge_features_tensor = torch.tensor(edge_features, dtype=torch.float32)
+    edge_index_tensor = torch.tensor(edge_index, dtype=torch.long)
     target_tensor = torch.tensor(target, dtype=torch.int64)
 
     # Create a Data object for torch_geometric
@@ -50,16 +50,19 @@ def convert_nx_to_tg_data(graph: nx.Graph) -> Data:
 
     # Calculate the adjacency matrix
     adj_matrix = torch.zeros(data.num_nodes, data.num_nodes)
+    
     for i in range(edge_index_tensor.size(1)):
         src, dst = edge_index_tensor[:, i]
         adj_matrix[src, dst] = 1
         adj_matrix[dst, src] = 1
 
-    data.adj_matrix = adj_matrix
+    data.adj_matrix = adj_matrix 
+    
+    # print(f"\nCreated Data object:")
+    # print(f"x: {data.x.shape}") # torch.Size([num_nodes, feature_dim]) node_feature_dim == 7 in GAT-CADNet
+    # print(f"y: {data.y.shape}") # torch.Size([num_nodes])
+    # print(f"edge_index: {data.edge_index.shape}") # torch.Size([2, num_edges]) "2" because edge is made of 2 nodes
+    # print(f"edge_attr: {data.edge_attr.shape}") # torch.Size([num_edges, feature_dim]) edge_feature_dim == 7 in GAT-CADNet
+    # print(f"adj_matrix: {type(data.adj_matrix)}") # torch.Size([num_nodes, num_nodes])
 
     return data
-
-
-
-
-

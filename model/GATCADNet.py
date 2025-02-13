@@ -62,6 +62,7 @@ class GATCADNet(nn.Module):
 
         # (num_nodes, num_classes)
         predict_vertex_features = mlp_module(vertex_features)
+        print(f"predict_vertex_features: {predict_vertex_features.shape}")
         predict_vertex_features = F.softmax(predict_vertex_features, dim=1)
         
         # print(f"predict_vertex_features, predict_adj_matrix: {predict_vertex_features.shape}, {predict_adj_matrix.shape}")

@@ -42,6 +42,15 @@ class CADDataset(Dataset):
         |data.adj_matrix | (num_nodes, num_nodes)	     | Adjacency matrix
         """
         data = convert_nx_to_tg_data(graph)
+        
+        # # Debug prints
+        # print(f"\nData from {file_path}:")
+        # print(f"x shape: {data.x.shape}")  # Node features
+        # print(f"edge_index shape: {data.edge_index.shape}")  # Edge connectivity
+        # print(f"edge_attr shape: {data.edge_attr.shape}")  # Edge features
+        # print(f"y shape: {data.y.shape}")  # Node labels
+        # print(f"adj_matrix shape: {data.adj_matrix.shape}")  # Adjacency matrix
+        
         return data
 
 
